@@ -40,15 +40,49 @@ Here is an example of how to include an image in your writeup.
 
 #### 2. Using the DH parameter table you derived earlier, create individual transformation matrices about each joint. In addition, also generate a generalized homogeneous transform between base_link and gripper_link using only end-effector(gripper) pose.
 
-Links | alpha(i-1) | a(i-1) | d(i-1) | theta(i)
---- | --- | --- | --- | ---
-0->1 | 0 | 0 | L1 | qi
-1->2 | - pi/2 | L2 | 0 | -pi/2 + q2
-2->3 | 0 | 0 | 0 | 0
-3->4 |  0 | 0 | 0 | 0
-4->5 | 0 | 0 | 0 | 0
-5->6 | 0 | 0 | 0 | 0
-6->EE | 0 | 0 | 0 | 0
+//Add gif with rviz vizualization
+
+// Add image with DH paramenters derivation
+
+
+Links   | alpha(i-1) | a(i-1) | d(i-1) | theta(i)
+------- | ---------- | ------ | ------ | --------
+0 -> 1  | 0          | 0      | d1     | q1
+1 -> 2  | -pi/2      | a1     | 0      | q2 -pi/2
+2 -> 3  | 0          | a2     | 0      | q3
+3 -> 4  | -pi/2      | a3     | d4     | q4
+4 -> 5  |  pi/2      | 0      | 0      | q5
+5 -> 6  | -pi/2      | 0      | 0      | q6
+6 -> G  | 0          | 0      | dg     | 0
+
+
+To convert an and dn parameters, it is necessary to check urdf file with location of joints.
+
+Inspecting `kr210.urdf.xacro` file for the positions
+```
+  <joint name="fixed_base_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  <joint name="joint_1" type="revolute">
+    <origin xyz="0 0 0.33" rpy="0 0 0"/>
+  <joint name="joint_2" type="revolute">
+    <origin xyz="0.35 0 0.42" rpy="0 0 0"/>
+  <joint name="joint_3" type="revolute">
+    <origin xyz="0 0 1.25" rpy="0 0 0"/>
+  <joint name="joint_4" type="revolute">
+    <origin xyz="0.96 0 -0.054" rpy="0 0 0"/>
+  <joint name="joint_5" type="revolute">
+    <origin xyz="0.54 0 0" rpy="0 0 0"/>
+  <joint name="joint_6" type="revolute">
+    <origin xyz="0.193 0 0" rpy="0 0 0"/>
+
+  <joint name="gripper_joint" type="fixed">
+    <origin xyz="0.0375 0 0" rpy="0 0 0"/>
+  <joint name="gripper_joint" type="fixed">
+    <origin xyz="0.11 0 0" rpy="0 0 0"/><!--0.087-->
+```
+
+The numerical DH parameters are listed bellow
+
 
 
 #### 3. Decouple Inverse Kinematics problem into Inverse Position Kinematics and inverse Orientation Kinematics; doing so derive the equations to calculate all individual joint angles.
