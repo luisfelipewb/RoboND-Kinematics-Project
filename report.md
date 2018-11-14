@@ -58,7 +58,7 @@ Links   | alpha(i-1) | a(i-1) | d(i-1) | theta(i)
 
 To convert an and dn parameters, it is necessary to check urdf file with location of joints.
 
-Inspecting `kr210.urdf.xacro` file for the positions
+Inspecting `kr210.urdf.xacro` file we can find the position for each joint and calculate the dimentions of the links
 ```
   <joint name="fixed_base_joint" type="fixed">
     <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -74,14 +74,28 @@ Inspecting `kr210.urdf.xacro` file for the positions
     <origin xyz="0.54 0 0" rpy="0 0 0"/>
   <joint name="joint_6" type="revolute">
     <origin xyz="0.193 0 0" rpy="0 0 0"/>
-
-  <joint name="gripper_joint" type="fixed">
-    <origin xyz="0.0375 0 0" rpy="0 0 0"/>
   <joint name="gripper_joint" type="fixed">
     <origin xyz="0.11 0 0" rpy="0 0 0"/><!--0.087-->
 ```
 
+a1 =  0.35
+a2 =  1.25
+a3 = -0.054
+d1 =  0.33 + 0.42
+d4 =  0.96 + 0.54
+dg =  0.193 + 0.11
+
+
 The numerical DH parameters are listed bellow
+Links   | alpha(i-1) | a(i-1) | d(i-1) | theta(i)
+------- | ---------- | ------ | ------ | --------
+0 -> 1  |  0         |  0     | 0.75   | q1
+1 -> 2  | -pi/2      |  0.35  | 0      | q2 -pi/2
+2 -> 3  |  0         |  1.25  | 0      | q3
+3 -> 4  | -pi/2      | -0.054 | 1.5    | q4
+4 -> 5  |  pi/2      |  0     | 0      | q5
+5 -> 6  | -pi/2      |  0     | 0      | q6
+6 -> G  |  0         |  0     | 0.303  | 0
 
 
 
