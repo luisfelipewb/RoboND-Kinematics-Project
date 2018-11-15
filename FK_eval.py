@@ -33,9 +33,9 @@ T0_1 = Matrix([[             cos(q1),            -sin(q1),            0,        
                [                   0,                   0,            0,               1]])
 T0_1 = T0_1.subs(s)
 
-T1_2 = Matrix([[             cos(q2),            -sin(q2),            0,              a1],
-               [ sin(q2)*cos(alpha1), cos(q2)*cos(alpha1), -sin(alpha1), -sin(alpha1)*d2],
-               [ sin(q2)*sin(alpha1), cos(q2)*sin(alpha1),  cos(alpha1),  cos(alpha1)*d2],
+T1_2 = Matrix([[             cos(q2-pi/2),            -sin(q2-pi/2),            0,              a1],
+               [ sin(q2-pi/2)*cos(alpha1), cos(q2-pi/2)*cos(alpha1), -sin(alpha1), -sin(alpha1)*d2],
+               [ sin(q2-pi/2)*sin(alpha1), cos(q2-pi/2)*sin(alpha1),  cos(alpha1),  cos(alpha1)*d2],
                [                   0,                   0,            0,               1]])
 T1_2 = T1_2.subs(s)
 
@@ -69,17 +69,52 @@ T6_g = Matrix([[             cos(qg),            -sin(qg),            0,        
                [                   0,                   0,            0,               1]])
 T6_g = T6_g.subs(s)
 
-print ("T0_1", T0_1)
-print ("T1_2", T1_2)
+Trx = Matrix([[ 1,       0,         0, 0],
+              [ 0,  cos(pi), -sin(pi), 0],
+              [ 0,  sin(pi),  cos(pi), 0],
+              [ 0,        0,        0, 1]])
+
+Try = Matrix([[  cos(pi/2), 0, sin(pi/2), 0],
+              [          0, 1,         0, 0],
+              [ -sin(pi/2), 0, cos(pi/2), 0],
+              [          0, 0,         0, 1]])
+
+
+
+#print ("T0_1", T0_1)
+#print ("T1_2", T1_2)
 print ("T2_3", T2_3)
-print ("T3_4", T3_4)
-print ("T4_5", T4_5)
-print ("T5_6", T5_6)
-print ("T6_g", T6_g)
+#print ("T3_4", T3_4)
+#print ("T4_5", T4_5)
+#print ("T5_6", T5_6)
+#print ("T6_g", T6_g)
+#print ("Trx", Trx)
+#print ("Try", Try)
+
+Trot = simplify (Trx * Try)
+#print ("Trot", Trot)
+
+T0_2 = simplify (T0_1 * T1_2)
+print ("EVAL T0_2")
+#print(T0_2.evalf(subs={q1:0, q2:0, q3:0, q4:0, q5:0, q6:0}))
+
+T0_3 = simplify (T0_2 * T2_3)
+print ("EVAL  T0_3")
+#print(T0_3.evalf(subs={q1:0, q2:0, q3:0, q4:0, q5:0, q6:0}))
+
+T0_5 = simplify (T0_3 * T3_4 * T4_5)
+print ("EVAL  T0_5")
+#print(T0_5.evalf(subs={q1:0, q2:0, q3:0, q4:0, q5:0, q6:0}))
+
+T0_g = simplify (T0_5 * T5_6 * T6_g * Trot)
+print ("EVAL  T0_g")
+print(T0_g.evalf(subs={q1:0, q2:0, q3:0, q4:0, q5:0, q6:0}))
+
+print(T0_g.evalf(subs={q1:0.48, q2:1.03, q3:-1.24, q4:-0.49, q5:-0.52, q6:2.81}))
 
 
-#TODO add matrix to rotate gripper and adjust coords
+#T0_g = simplify (T0_1 * T1_2 * T2_3 * T3_4 * T4_5 * T5_6 * T6_g * Trot)
+#print ("T0_g", T0_g)
+#print(T0_g.evalf(subs={q1:0, q2:0, q3:0, q4:0, q5:0, q6:0}))
 
-
-#TODO Evaluate total transformation matrix
 
