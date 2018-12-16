@@ -2,6 +2,13 @@ from sympy import symbols, cos, sin, pi, simplify
 from sympy.matrices import Matrix
 import numpy as np
 
+def tf_matrix(a, alpha, d, q):
+    TF = Matrix([[           cos(q),           -sin(q),           0,             a],
+                 [sin(q)*cos(alpha), cos(q)*cos(alpha), -sin(alpha), -sin(alpha)*d],
+                 [sin(q)*sin(alpha), cos(q)*sin(alpha),  cos(alpha),  cos(alpha)*d],
+                 [                0,                 0,           0,             1]])
+    return TF
+
 # Define symbols
 q1, q2, q3, q4, q5, q6  = symbols('q1:7')
 a0, a1, a2, a3, a4, a5, a6 = symbols ('a0:7')
@@ -26,48 +33,13 @@ s = {alpha0:     0,  a0:   0,  d1: d01,
      alpha5: -pi/2,  a5:   0,  d6:   0,
      alpha6:     0,  a6:   0,  dg: d6g}
 
-#### Homogeneous Transforms
-T0_1 = Matrix([[             cos(q1),            -sin(q1),            0,              a0],
-               [ sin(q1)*cos(alpha0), cos(q1)*cos(alpha0), -sin(alpha0), -sin(alpha0)*d1],
-               [ sin(q1)*sin(alpha0), cos(q1)*sin(alpha0),  cos(alpha0),  cos(alpha0)*d1],
-               [                   0,                   0,            0,               1]])
-T0_1 = T0_1.subs(s)
-
-T1_2 = Matrix([[             cos(q2-pi/2),            -sin(q2-pi/2),            0,              a1],
-               [ sin(q2-pi/2)*cos(alpha1), cos(q2-pi/2)*cos(alpha1), -sin(alpha1), -sin(alpha1)*d2],
-               [ sin(q2-pi/2)*sin(alpha1), cos(q2-pi/2)*sin(alpha1),  cos(alpha1),  cos(alpha1)*d2],
-               [                   0,                   0,            0,               1]])
-T1_2 = T1_2.subs(s)
-
-T2_3 = Matrix([[             cos(q3),            -sin(q3),            0,              a2],
-               [ sin(q3)*cos(alpha2), cos(q3)*cos(alpha2), -sin(alpha2), -sin(alpha2)*d3],
-               [ sin(q3)*sin(alpha2), cos(q3)*sin(alpha2),  cos(alpha2),  cos(alpha2)*d3],
-               [                   0,                   0,            0,               1]])
-T2_3 = T2_3.subs(s)
-
-T3_4 = Matrix([[             cos(q4),            -sin(q4),            0,              a3],
-               [ sin(q4)*cos(alpha3), cos(q4)*cos(alpha3), -sin(alpha3), -sin(alpha3)*d4],
-               [ sin(q4)*sin(alpha3), cos(q4)*sin(alpha3),  cos(alpha3),  cos(alpha3)*d4],
-               [                   0,                   0,            0,               1]])
-T3_4 = T3_4.subs(s)
-
-T4_5 = Matrix([[             cos(q5),            -sin(q5),            0,              a4],
-               [ sin(q5)*cos(alpha4), cos(q5)*cos(alpha4), -sin(alpha4), -sin(alpha4)*d5],
-               [ sin(q5)*sin(alpha4), cos(q5)*sin(alpha4),  cos(alpha4),  cos(alpha4)*d5],
-               [                   0,                   0,            0,               1]])
-T4_5 = T4_5.subs(s)
-
-T5_6 = Matrix([[             cos(q6),            -sin(q6),            0,              a5],
-               [ sin(q6)*cos(alpha5), cos(q6)*cos(alpha5), -sin(alpha5), -sin(alpha5)*d6],
-               [ sin(q6)*sin(alpha5), cos(q6)*sin(alpha5),  cos(alpha5),  cos(alpha5)*d6],
-               [                   0,                   0,            0,               1]])
-T5_6 = T5_6.subs(s)
-
-T6_g = Matrix([[             cos(qg),            -sin(qg),            0,              a6],
-               [ sin(qg)*cos(alpha6), cos(qg)*cos(alpha6), -sin(alpha6), -sin(alpha6)*dg],
-               [ sin(qg)*sin(alpha6), cos(qg)*sin(alpha6),  cos(alpha6),  cos(alpha6)*dg],
-               [                   0,                   0,            0,               1]])
-T6_g = T6_g.subs(s)
+T0_1 = tf_matrix(a0, alpha0, d1, q1).subs(s)
+T1_2 = tf_matrix(a1, alpha1, d2, q2).subs(s)
+T2_3 = tf_matrix(a2, alpha2, d3, q3).subs(s)
+T3_4 = tf_matrix(a3, alpha3, d4, q4).subs(s)
+T4_5 = tf_matrix(a4, alpha4, d5, q5).subs(s)
+T5_6 = tf_matrix(a5, alpha5, d6, q6).subs(s)
+T6_g = tf_matrix(a6, alpha6, dg, qg).subs(s)
 
 Trx = Matrix([[ 1,       0,         0, 0],
               [ 0,  cos(pi), -sin(pi), 0],
@@ -79,39 +51,36 @@ Try = Matrix([[  cos(pi/2), 0, sin(pi/2), 0],
               [ -sin(pi/2), 0, cos(pi/2), 0],
               [          0, 0,         0, 1]])
 
+Trot = (Trx * Try)
 
-
-#print ("T0_1", T0_1)
-#print ("T1_2", T1_2)
+print ("T0_1", T0_1)
+print ("T1_2", T1_2)
 print ("T2_3", T2_3)
-#print ("T3_4", T3_4)
-#print ("T4_5", T4_5)
-#print ("T5_6", T5_6)
-#print ("T6_g", T6_g)
-#print ("Trx", Trx)
-#print ("Try", Try)
+print ("T3_4", T3_4)
+print ("T4_5", T4_5)
+print ("T5_6", T5_6)
+print ("T6_g", T6_g)
+print ("Trx", Trx)
+print ("Try", Try)
+print ("Trot", Trot)
 
-Trot = simplify (Trx * Try)
-#print ("Trot", Trot)
-
-T0_2 = simplify (T0_1 * T1_2)
-print ("EVAL T0_2")
+T0_2 = (T0_1 * T1_2)
+#print ("EVAL T0_2")
 #print(T0_2.evalf(subs={q1:0, q2:0, q3:0, q4:0, q5:0, q6:0}))
 
-T0_3 = simplify (T0_2 * T2_3)
-print ("EVAL  T0_3")
+T0_3 = (T0_2 * T2_3)
+#print ("EVAL  T0_3")
 #print(T0_3.evalf(subs={q1:0, q2:0, q3:0, q4:0, q5:0, q6:0}))
 
-T0_5 = simplify (T0_3 * T3_4 * T4_5)
-print ("EVAL  T0_5")
+T0_5 = (T0_3 * T3_4 * T4_5)
+#print ("EVAL  T0_5")
 #print(T0_5.evalf(subs={q1:0, q2:0, q3:0, q4:0, q5:0, q6:0}))
 
-T0_g = simplify (T0_5 * T5_6 * T6_g * Trot)
+T0_g = (T0_5 * T5_6 * T6_g * Trot)
 print ("EVAL  T0_g")
 print(T0_g.evalf(subs={q1:0, q2:0, q3:0, q4:0, q5:0, q6:0}))
 
 print(T0_g.evalf(subs={q1:0.48, q2:1.03, q3:-1.24, q4:-0.49, q5:-0.52, q6:2.81}))
-
 
 #T0_g = simplify (T0_1 * T1_2 * T2_3 * T3_4 * T4_5 * T5_6 * T6_g * Trot)
 #print ("T0_g", T0_g)
