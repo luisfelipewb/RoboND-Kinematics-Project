@@ -87,12 +87,13 @@ def handle_calculate_IK(req):
                            [0, sin(x),  cos(x), 0],
                            [0,      0, 0      , 1]])
 
-        R_y = Rot_y(-90*dtr)
-        R_z = Rot_z(180*dtr)
-        R_corr = (R_z * R_y)
+        R_y = Rot_y(-pi/2)
+        R_z = Rot_z(pi)
+        T_corr = (R_z * R_y)
 
         # Extract rotation matrices from the transformation matrices
         # RA_B = TA_B.row_del(3).col_del(3)
+        R_corr = T_corr[:3][:3]
         ###
 
         # Initialize service response
@@ -114,17 +115,50 @@ def handle_calculate_IK(req):
 
             ### Your IK code here
             # Compensate for rotation discrepancy between DH parameters and Gazebo
-            ROT_EE = Rot_z(yaw) * Rot_y(pitch) * Rot_x(roll) * R_corr
+            ROT_EE = Rot_z(yaw) * Rot_y(pitch) * Rot_x(roll) * T_corr
 
             EE = Matrix([[px],[py],[pz]])
             #Calculate wrist center
-            WC = EE - (0.303) * ROT_EE[:,2]
+            WC = EE - (0.303) * ROT_EE[:3,2]
 
-            print('EE', EE) 
-            print('WC', WC) 
             # Calculate joint angles using Geometric IK method
+            # theta1
+            theta1 = atan2(WC[1], WC[0])
             #
-            #
+
+            # theta2
+            side_1 = sqrt(WC[0]**2 + WC[1]**2) - 0.35
+            side_2 = WC[2] - 0.75
+            angle_1 = atan2(side_2,side_1)
+
+            side_a = sqrt(1.5**2 + 0.054**2)
+            side_b = sqrt(side_1**2 + side_2**2)
+            side_c = 1.25
+
+            alpha = acos((side_b**2 + side_c**2 - side_a**2)/(2*side_b*side_c))
+
+            theta2 = pi/2 - alpha - angle_1
+
+            # theta3
+            angle_2 = atan2(0.054,1.5)
+            beta = acos((side_a**2 + side_c**2 - side_b**2)/(2*side_a*side_c))
+
+            theta3 = pi/2 - beta - angle_2
+
+
+            T0_3 = T0_1 * T1_2 * T2_3 # does not need to be calculated everytime
+            R0_3 = T0_3.evalf(subs={q1:theta1, q2:theta2, q3:theta3})[0:3, 0:3]
+            R0_3 = R0_3.row_join(Matrix([[0], [0], [0]])).col_join(Matrix([[0, 0, 0, 1]]))
+            R3_6 = R0_3.inv('LU') * ROT_EE
+
+            theta5 = atan2(sqrt(R3_6[0,2]**2+R3_6[2,2]**2), R3_6[1,2])
+            if sin(theta5) < 0:
+                theta4 = atan2(-R3_6[2,2], R3_6[0,2])
+                theta6 = atan2(R3_6[1,1], -R3_6[1,0])
+            else:
+                theta4 = atan2(R3_6[2,2], -R3_6[0,2])
+                theta6 = atan2(-R3_6[1,1], R3_6[1,0])
+
             ###
 
             # Populate response for the IK request
