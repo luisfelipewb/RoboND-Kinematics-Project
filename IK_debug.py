@@ -58,34 +58,134 @@ def test_code(test_case):
 
     req = Pose(comb)
     start_time = time()
-    
-    ########################################################################################
-    ## 
 
-    ## Insert IK code here!
-    
-    theta1 = 0
-    theta2 = 0
-    theta3 = 0
-    theta4 = 0
-    theta5 = 0
-    theta6 = 0
-
-    ## 
-    ########################################################################################
-    
     ########################################################################################
     ## For additional debugging add your forward kinematics here. Use your previously calculated thetas
     ## as the input and output the position of your end effector as your_ee = [x,y,z]
 
     ## (OPTIONAL) YOUR CODE HERE!
 
+    # Create symbols
+    q1, q2, q3, q4, q5, q6, qg = symbols('q1:7 qg')
+    a0, a1, a2, a3, a4, a5, a6 = symbols ('a0:7')
+    d1, d2, d3, d4, d5, d6, dg = symbols('d1:7 dg')
+    alpha0, alpha1, alpha2, alpha3, alpha4, alpha5, alpha6 = symbols('alpha0:7')
+
+    # Create Modified DH parameters
+    dh_parameters = {alpha0:     0,  a0:      0,  d1:  0.75,  q1:      q1,
+                     alpha1: -pi/2,  a1:   0.35,  d2:     0,  q2: q2-pi/2,
+                     alpha2:     0,  a2:   1.25,  d3:     0,  q3:      q3,
+                     alpha3: -pi/2,  a3: -0.054,  d4:   1.5,  q4:      q4,
+                     alpha4:  pi/2,  a4:      0,  d5:     0,  q5:      q5,
+                     alpha5: -pi/2,  a5:      0,  d6:     0,  q6:      q6,
+                     alpha6:     0,  a6:      0,  dg: 0.303,  qg:       0 }
+
+    print(dh_parameters)
+
+    # Define Modified DH Transformation matrix
+    def tf_matrix(a, alpha, d, q):
+        return Matrix([[           cos(q),           -sin(q),           0,             a],
+                       [sin(q)*cos(alpha), cos(q)*cos(alpha), -sin(alpha), -sin(alpha)*d],
+                       [sin(q)*sin(alpha), cos(q)*sin(alpha),  cos(alpha),  cos(alpha)*d],
+                       [                0,                 0,           0,             1]])
+
+    # Create individual transformation matrices
+    T0_1 = tf_matrix(a0, alpha0, d1, q1).subs(dh_parameters)
+    T1_2 = tf_matrix(a1, alpha1, d2, q2).subs(dh_parameters)
+    T2_3 = tf_matrix(a2, alpha2, d3, q3).subs(dh_parameters)
+    T3_4 = tf_matrix(a3, alpha3, d4, q4).subs(dh_parameters)
+    T4_5 = tf_matrix(a4, alpha4, d5, q5).subs(dh_parameters)
+    T5_6 = tf_matrix(a5, alpha5, d6, q6).subs(dh_parameters)
+    T6_g = tf_matrix(a6, alpha6, dg, qg).subs(dh_parameters)
+
+    T0_g = T0_1 * T1_2 * T2_3 * T3_4 * T4_5 * T5_6 * T6_g
+
+    # Create auxiliary rotation matrices
+    def Rot_z(z):
+        return Matrix([[cos(z), -sin(z), 0],
+                       [sin(z),  cos(z), 0],
+                       [0     , 0      , 1]])
+    def Rot_y(y):
+        return Matrix([[ cos(y), 0, sin(y)],
+                       [      0, 1, 0     ],
+                       [-sin(y), 0, cos(y)]])
+    def Rot_x(x):
+        return Matrix([[1,      0, 0      ],
+                       [0, cos(x), -sin(x)],
+                       [0, sin(x),  cos(x)]])
+
+    R_y = Rot_y(-pi/2)
+    R_z = Rot_z(pi)
+    R_corr = (R_z * R_y)
     ## End your code input for forward kinematics here!
     ########################################################################################
 
-    ## For error analysis please set the following variables of your WC location and EE location in the format of [x,y,z]
+
+    ########################################################################################
+    ## 
+
+    ## Insert IK code here!
+    # Compensate for rotation discrepancy between DH parameters and Gazebo
+    EE = Matrix(test_case[0][0])
+    (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(test_case[0][1])
+
+    ROT_EE = Rot_z(yaw) * Rot_y(pitch) * Rot_x(roll) * R_corr
+
+    #Calculate wrist center
+    WC = EE - (0.303) * ROT_EE[:,2]
+    #WC = test_case[1]
+
+    # theta1
+    theta1 = atan2(WC[1], WC[0])
+
+    # theta2
+    side_1 = sqrt(WC[0]**2 + WC[1]**2) - 0.35
+    side_2 = WC[2] - 0.75
+    angle_1 = atan2(side_2,side_1)
+
+    side_a = sqrt(1.5**2 + 0.054**2)
+    side_b = sqrt(side_1**2 + side_2**2)
+    side_c = 1.25
+
+    alpha = acos((side_b**2 + side_c**2 - side_a**2)/(2*side_b*side_c))
+
+    theta2 = pi/2 - alpha - angle_1
+
+    # theta3
+    angle_2 = atan2(0.054,1.5)
+    beta = acos((side_a**2 + side_c**2 - side_b**2)/(2*side_a*side_c))
+
+    theta3 = pi/2 - beta - angle_2
+
+
+    T0_3 = T0_1 * T1_2 * T2_3 # does not need to be calculated everytime
+    R0_3 = T0_3.evalf(subs={q1:theta1, q2:theta2, q3:theta3})[0:3, 0:3]
+    R3_6 = R0_3.inv('LU') * ROT_EE
+
+
+    theta4 = atan2(R3_6[2,2], -R3_6[0,2])
+    theta5 = atan2(sqrt(R3_6[0,2]*R3_6[0,2] + R3_6[2,2]*R3_6[2,2]),R3_6[1,2])
+    theta6 = atan2(-R3_6[1,1], -R3_6[1,0])
+    ###
+
+    #theta1 = test_case[2][0]
+    #theta2 = test_case[2][1]
+    #theta3 = test_case[2][2]
+    #theta4 = test_case[2][3]
+    #theta5 = test_case[2][4]
+    #theta6 = test_case[2][5]
+
+    #print("T0_g")
+    FK = T0_g.evalf(subs={q1:theta1, q2:theta2, q3:theta3, q4:theta4, q5:theta5, q6:theta6})
+    ## 
+    ########################################################################################
+
+        ## For error analysis please set the following variables of your WC location and EE location in the format of [x,y,z]
     your_wc = [1,1,1] # <--- Load your calculated WC values in this array
+    your_wc = WC
     your_ee = [1,1,1] # <--- Load your calculated end effector value from your forward kinematics
+    your_ee = FK[0:3, 3]
+    #your_ee = test_case[0][0]
     ########################################################################################
 
     ## Error analysis
@@ -132,10 +232,13 @@ def test_code(test_case):
         print ("Overall end effector offset is: %04.8f units \n" % ee_offset)
 
 
-
-
 if __name__ == "__main__":
     # Change test case number for different scenarios
     test_case_number = 1
+    test_code(test_cases[test_case_number])
 
+    test_case_number = 2
+    test_code(test_cases[test_case_number])
+
+    test_case_number = 3
     test_code(test_cases[test_case_number])
