@@ -72,28 +72,24 @@ def handle_calculate_IK(req):
 
         # Create auxiliary rotation matrices
         def Rot_z(z):
-            return Matrix([[cos(z), -sin(z), 0, 0],
-                           [sin(z),  cos(z), 0, 0],
-                           [0     , 0      , 1, 0],
-                           [0     , 0      , 0, 1]])
+            return Matrix([[cos(z), -sin(z), 0],
+                           [sin(z),  cos(z), 0],
+                           [0     , 0      , 1]])
         def Rot_y(y):
-            return Matrix([[ cos(y), 0, sin(y), 0],
-                           [      0, 1, 0     , 0],
-                           [-sin(y), 0, cos(y), 0],
-                           [0      , 0, 0     , 1]])
+            return Matrix([[ cos(y), 0, sin(y)],
+                           [      0, 1, 0     ],
+                           [-sin(y), 0, cos(y)]])
         def Rot_x(x):
-            return Matrix([[1,      0, 0      , 0],
-                           [0, cos(x), -sin(x), 0],
-                           [0, sin(x),  cos(x), 0],
-                           [0,      0, 0      , 1]])
+            return Matrix([[1,      0, 0      ],
+                           [0, cos(x), -sin(x)],
+                           [0, sin(x),  cos(x)]])
 
         R_y = Rot_y(-pi/2)
         R_z = Rot_z(pi)
-        T_corr = (R_z * R_y)
+        R_corr = (R_z * R_y)
 
         # Extract rotation matrices from the transformation matrices
         # RA_B = TA_B.row_del(3).col_del(3)
-        R_corr = T_corr[:3][:3]
         ###
 
         # Initialize service response
@@ -115,11 +111,11 @@ def handle_calculate_IK(req):
 
             ### Your IK code here
             # Compensate for rotation discrepancy between DH parameters and Gazebo
-            ROT_EE = Rot_z(yaw) * Rot_y(pitch) * Rot_x(roll) * T_corr
+            ROT_EE = Rot_z(yaw) * Rot_y(pitch) * Rot_x(roll) * R_corr
 
             EE = Matrix([[px],[py],[pz]])
             #Calculate wrist center
-            WC = EE - (0.303) * ROT_EE[:3,2]
+            WC = EE - (0.303) * ROT_EE[:,2]
 
             # Calculate joint angles using Geometric IK method
             # theta1
@@ -148,7 +144,7 @@ def handle_calculate_IK(req):
 
             T0_3 = T0_1 * T1_2 * T2_3 # does not need to be calculated everytime
             R0_3 = T0_3.evalf(subs={q1:theta1, q2:theta2, q3:theta3})[0:3, 0:3]
-            R0_3 = R0_3.row_join(Matrix([[0], [0], [0]])).col_join(Matrix([[0, 0, 0, 1]]))
+            #R0_3 = R0_3.row_join(Matrix([[0], [0], [0]])).col_join(Matrix([[0, 0, 0, 1]]))
             R3_6 = R0_3.inv('LU') * ROT_EE
 
             theta5 = atan2(sqrt(R3_6[0,2]**2+R3_6[2,2]**2), R3_6[1,2])
