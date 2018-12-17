@@ -28,20 +28,50 @@ def handle_calculate_IK(req):
 
         ### Your FK code here
         # Create symbols
-	#
-	#
-	# Create Modified DH parameters
-	#
-	#
-	# Define Modified DH Transformation matrix
-	#
-	#
-	# Create individual transformation matrices
-	#
-	#
-	# Extract rotation matrices from the transformation matrices
-	#
-	#
+        q1, q2, q3, q4, q5, q6  = symbols('q1:7')
+        a0, a1, a2, a3, a4, a5, a6 = symbols ('a0:7')
+        d1, d2, d3, d4, d5, d6, dg = symbols('d1:7 dg')
+        alpha0, alpha1, alpha2, alpha3, alpha4, alpha5, alpha6 = symbols('alpha0:7')
+
+        # Numerical values
+        a12 = 0.35
+        a23 = 1.25
+        a34 = -0.054
+        d01 = 0.33 + 0.42
+        d34 = 0.96 + 0.54
+        d6g = 0.193 + 0.11
+        qg  = 0
+
+        # Create Modified DH parameters
+        dh_parameters = {alpha0:     0,  a0:   0,  d1: d01,
+             alpha1: -pi/2,  a1: a12,  d2:   0,
+             alpha2:     0,  a2: a23,  d3:   0,
+             alpha3: -pi/2,  a3: a34,  d4: d34,
+             alpha4:  pi/2,  a4:   0,  d5:   0,
+             alpha5: -pi/2,  a5:   0,  d6:   0,
+             alpha6:     0,  a6:   0,  dg: d6g}
+
+
+        # Define Modified DH Transformation matrix
+        def tf_matrix(a, alpha, d, q):
+            TF = Matrix([[           cos(q),           -sin(q),           0,             a],
+                         [sin(q)*cos(alpha), cos(q)*cos(alpha), -sin(alpha), -sin(alpha)*d],
+                         [sin(q)*sin(alpha), cos(q)*sin(alpha),  cos(alpha),  cos(alpha)*d],
+                         [                0,                 0,           0,             1]])
+            return TF
+
+        # Create individual transformation matrices
+        T0_1 = tf_matrix(a0, alpha0, d1, q1).subs(dh_parameters)
+        T1_2 = tf_matrix(a1, alpha1, d2, q2).subs(dh_parameters)
+        T2_3 = tf_matrix(a2, alpha2, d3, q3).subs(dh_parameters)
+        T3_4 = tf_matrix(a3, alpha3, d4, q4).subs(dh_parameters)
+        T4_5 = tf_matrix(a4, alpha4, d5, q5).subs(dh_parameters)
+        T5_6 = tf_matrix(a5, alpha5, d6, q6).subs(dh_parameters)
+        T6_g = tf_matrix(a6, alpha6, dg, qg).subs(dh_parameters)
+
+
+        # Extract rotation matrices from the transformation matrices
+        #
         ###
 
         # Initialize service response
@@ -50,9 +80,9 @@ def handle_calculate_IK(req):
             # IK code starts here
             joint_trajectory_point = JointTrajectoryPoint()
 
-	    # Extract end-effector position and orientation from request
-	    # px,py,pz = end-effector position
-	    # roll, pitch, yaw = end-effector orientation
+            # Extract end-effector position and orientation from request
+            # px,py,pz = end-effector position
+            # roll, pitch, yaw = end-effector orientation
             px = req.poses[x].position.x
             py = req.poses[x].position.y
             pz = req.poses[x].position.z
@@ -61,19 +91,19 @@ def handle_calculate_IK(req):
                 [req.poses[x].orientation.x, req.poses[x].orientation.y,
                     req.poses[x].orientation.z, req.poses[x].orientation.w])
 
-            ### Your IK code here
-	    # Compensate for rotation discrepancy between DH parameters and Gazebo
-	    #
-	    #
-	    # Calculate joint angles using Geometric IK method
-	    #
-	    #
-            ###
+        ### Your IK code here
+        # Compensate for rotation discrepancy between DH parameters and Gazebo
+        #
+        #
+        # Calculate joint angles using Geometric IK method
+        #
+        #
+        ###
 
-            # Populate response for the IK request
-            # In the next line replace theta1,theta2...,theta6 by your joint angle variables
-	    joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
-	    joint_trajectory_list.append(joint_trajectory_point)
+        # Populate response for the IK request
+        # In the next line replace theta1,theta2...,theta6 by your joint angle variables
+        joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
+        joint_trajectory_list.append(joint_trajectory_point)
 
         rospy.loginfo("length of Joint Trajectory List: %s" % len(joint_trajectory_list))
         return CalculateIKResponse(joint_trajectory_list)
