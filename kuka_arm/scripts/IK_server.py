@@ -70,8 +70,29 @@ def handle_calculate_IK(req):
         T6_g = tf_matrix(a6, alpha6, dg, qg).subs(dh_parameters)
 
 
+        # Create auxiliary rotation matrices
+        def Rot_z(z):
+            return Matrix([[cos(z), -sin(z), 0, 0],
+                           [sin(z),  cos(z), 0, 0],
+                           [0     , 0      , 1, 0],
+                           [0     , 0      , 0, 1]])
+        def Rot_y(y):
+            return Matrix([[ cos(y), 0, sin(y), 0],
+                           [      0, 1, 0     , 0],
+                           [-sin(y), 0, cos(y), 0],
+                           [0      , 0, 0     , 1]])
+        def Rot_x(x):
+            return Matrix([[1,      0, 0      , 0],
+                           [0, cos(x), -sin(x), 0],
+                           [0, sin(x),  cos(x), 0],
+                           [0,      0, 0      , 1]])
+
+        R_y = Rot_y(-90*dtr)
+        R_z = Rot_z(180*dtr)
+        R_corr = (R_z * R_y)
+
         # Extract rotation matrices from the transformation matrices
-        #
+        # RA_B = TA_B.row_del(3).col_del(3)
         ###
 
         # Initialize service response
@@ -91,19 +112,25 @@ def handle_calculate_IK(req):
                 [req.poses[x].orientation.x, req.poses[x].orientation.y,
                     req.poses[x].orientation.z, req.poses[x].orientation.w])
 
-        ### Your IK code here
-        # Compensate for rotation discrepancy between DH parameters and Gazebo
-        #
-        #
-        # Calculate joint angles using Geometric IK method
-        #
-        #
-        ###
+            ### Your IK code here
+            # Compensate for rotation discrepancy between DH parameters and Gazebo
+            ROT_EE = Rot_z(yaw) * Rot_y(pitch) * Rot_x(roll) * R_corr
 
-        # Populate response for the IK request
-        # In the next line replace theta1,theta2...,theta6 by your joint angle variables
-        joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
-        joint_trajectory_list.append(joint_trajectory_point)
+            EE = Matrix([[px],[py],[pz]])
+            #Calculate wrist center
+            WC = EE - (0.303) * ROT_EE[:,2]
+
+            print('EE', EE) 
+            print('WC', WC) 
+            # Calculate joint angles using Geometric IK method
+            #
+            #
+            ###
+
+            # Populate response for the IK request
+            # In the next line replace theta1,theta2...,theta6 by your joint angle variables
+            joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
+            joint_trajectory_list.append(joint_trajectory_point)
 
         rospy.loginfo("length of Joint Trajectory List: %s" % len(joint_trajectory_list))
         return CalculateIKResponse(joint_trajectory_list)
