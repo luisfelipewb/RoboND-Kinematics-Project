@@ -80,7 +80,7 @@ def test_code(test_case):
                      alpha5: -pi/2,  a5:      0,  d6:     0,  q6:      q6,
                      alpha6:     0,  a6:      0,  dg: 0.303,  qg:       0 }
 
-    print(dh_parameters)
+    # print(dh_parameters)
 
     # Define Modified DH Transformation matrix
     def tf_matrix(a, alpha, d, q):
@@ -162,12 +162,11 @@ def test_code(test_case):
     R0_3 = T0_3.evalf(subs={q1:theta1, q2:theta2, q3:theta3})[0:3, 0:3]
     R3_6 = R0_3.inv('LU') * ROT_EE
 
-
     theta4 = atan2(R3_6[2,2], -R3_6[0,2])
     theta5 = atan2(sqrt(R3_6[0,2]*R3_6[0,2] + R3_6[2,2]*R3_6[2,2]),R3_6[1,2])
-    theta6 = atan2(-R3_6[1,1], -R3_6[1,0])
-    ###
+    theta6 = atan2(-R3_6[1,1], R3_6[1,0])
 
+    ###
     #theta1 = test_case[2][0]
     #theta2 = test_case[2][1]
     #theta3 = test_case[2][2]
@@ -181,9 +180,9 @@ def test_code(test_case):
     ########################################################################################
 
         ## For error analysis please set the following variables of your WC location and EE location in the format of [x,y,z]
-    your_wc = [1,1,1] # <--- Load your calculated WC values in this array
+    #your_wc = [1,1,1] # <--- Load your calculated WC values in this array
     your_wc = WC
-    your_ee = [1,1,1] # <--- Load your calculated end effector value from your forward kinematics
+    #your_ee = [1,1,1] # <--- Load your calculated end effector value from your forward kinematics
     your_ee = FK[0:3, 3]
     #your_ee = test_case[0][0]
     ########################################################################################

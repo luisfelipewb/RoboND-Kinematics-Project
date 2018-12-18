@@ -4,7 +4,7 @@
 
   <!--Send fake joint values-->
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
-    <param name="use_gui" value="false"/>
+    <param name="use_gui" value="true"/>
   </node>
 
   <!--Publish robot state to TF-->

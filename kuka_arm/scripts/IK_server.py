@@ -28,28 +28,20 @@ def handle_calculate_IK(req):
 
         ### Your FK code here
         # Create symbols
-        q1, q2, q3, q4, q5, q6  = symbols('q1:7')
+        q1, q2, q3, q4, q5, q6, qg  = symbols('q1:7 qg')
         a0, a1, a2, a3, a4, a5, a6 = symbols ('a0:7')
         d1, d2, d3, d4, d5, d6, dg = symbols('d1:7 dg')
         alpha0, alpha1, alpha2, alpha3, alpha4, alpha5, alpha6 = symbols('alpha0:7')
 
-        # Numerical values
-        a12 = 0.35
-        a23 = 1.25
-        a34 = -0.054
-        d01 = 0.33 + 0.42
-        d34 = 0.96 + 0.54
-        d6g = 0.193 + 0.11
-        qg  = 0
-
         # Create Modified DH parameters
-        dh_parameters = {alpha0:     0,  a0:   0,  d1: d01,
-             alpha1: -pi/2,  a1: a12,  d2:   0,
-             alpha2:     0,  a2: a23,  d3:   0,
-             alpha3: -pi/2,  a3: a34,  d4: d34,
-             alpha4:  pi/2,  a4:   0,  d5:   0,
-             alpha5: -pi/2,  a5:   0,  d6:   0,
-             alpha6:     0,  a6:   0,  dg: d6g}
+        dh_parameters = {alpha0:     0,  a0:      0,  d1:  0.75,  q1:      q1,
+                         alpha1: -pi/2,  a1:   0.35,  d2:     0,  q2: q2-pi/2,
+                         alpha2:     0,  a2:   1.25,  d3:     0,  q3:      q3,
+                         alpha3: -pi/2,  a3: -0.054,  d4:   1.5,  q4:      q4,
+                         alpha4:  pi/2,  a4:      0,  d5:     0,  q5:      q5,
+                         alpha5: -pi/2,  a5:      0,  d6:     0,  q6:      q6,
+                         alpha6:     0,  a6:      0,  dg: 0.303,  qg:       0 }
+
 
 
         # Define Modified DH Transformation matrix
@@ -147,13 +139,10 @@ def handle_calculate_IK(req):
             #R0_3 = R0_3.row_join(Matrix([[0], [0], [0]])).col_join(Matrix([[0, 0, 0, 1]]))
             R3_6 = R0_3.inv('LU') * ROT_EE
 
-            theta5 = atan2(sqrt(R3_6[0,2]**2+R3_6[2,2]**2), R3_6[1,2])
-            if sin(theta5) < 0:
-                theta4 = atan2(-R3_6[2,2], R3_6[0,2])
-                theta6 = atan2(R3_6[1,1], -R3_6[1,0])
-            else:
-                theta4 = atan2(R3_6[2,2], -R3_6[0,2])
-                theta6 = atan2(-R3_6[1,1], R3_6[1,0])
+
+            theta4 = atan2(R3_6[2,2], -R3_6[0,2])
+            theta5 = atan2(sqrt(R3_6[0,2]*R3_6[0,2] + R3_6[2,2]*R3_6[2,2]),R3_6[1,2])
+            theta6 = atan2(-R3_6[1,1], R3_6[1,0])
 
             ###
 
