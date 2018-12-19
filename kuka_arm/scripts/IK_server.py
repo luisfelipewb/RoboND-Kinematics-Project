@@ -136,8 +136,7 @@ def handle_calculate_IK(req):
 
             T0_3 = T0_1 * T1_2 * T2_3 # does not need to be calculated everytime
             R0_3 = T0_3.evalf(subs={q1:theta1, q2:theta2, q3:theta3})[0:3, 0:3]
-            #R0_3 = R0_3.row_join(Matrix([[0], [0], [0]])).col_join(Matrix([[0, 0, 0, 1]]))
-            R3_6 = R0_3.inv('LU') * ROT_EE
+            R3_6 = R0_3.transpose() * ROT_EE
 
 
             theta4 = atan2(R3_6[2,2], -R3_6[0,2])
